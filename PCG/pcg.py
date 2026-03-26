@@ -3,16 +3,18 @@ import hashlib
 import random
 import xml.etree.cElementTree as ET
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--width', type=int, default=8,help='the width of the map')
-    parser.add_argument('--height', type=int, default=8,help='the height of the map')
-    parser.add_argument('--map_count', type=int, default=10,help='the number of maps to generate')
-    parser.add_argument('--map_prefix', type=str, default='pcg',help='the prefix of the map file')
-    parser.add_argument('--include_wallrings', type=bool, default=False,help='include wallrings in the map')
+    parser.add_argument("--width", type=int, default=8, help="the width of the map")
+    parser.add_argument("--height", type=int, default=8, help="the height of the map")
+    parser.add_argument("--map_count", type=int, default=10, help="the number of maps to generate")
+    parser.add_argument("--map_prefix", type=str, default="pcg", help="the prefix of the map file")
+    parser.add_argument("--include_wallrings", type=bool, default=False, help="include wallrings in the map")
 
     args = parser.parse_args()
     return args
+
 
 class PCG:
     def __init__(
@@ -158,20 +160,21 @@ class PCG:
         if map_hash in map_hashes:
             print("Duplicate map found, skipping generation.")
             return None
-        
+
         map_hashes.add(map_hash)
         tree = ET.ElementTree(root)
         tree.write(target_file)
         return tree
-    
+
     def get_map_hash(self, root):
-        map_string = ET.tostring(root, encoding='utf-8', method='xml')
+        map_string = ET.tostring(root, encoding="utf-8", method="xml")
         return hashlib.md5(map_string).hexdigest()
+
 
 if __name__ == "__main__":
     map_hashes = set()
     args = parse_args()
-    print(f'Generating {args.map_count} maps')
+    print(f"Generating {args.map_count} maps")
     for i in range(args.map_count):
         pcg = PCG(width=args.width, height=args.height, include_wallrings=args.include_wallrings)
         target_file = f"maps/{args.map_prefix}_{str(i).zfill(5)}.xml"
