@@ -8,7 +8,7 @@ from distutils.util import strtobool
 
 import numpy as np
 import torch
-from gym.spaces import MultiDiscrete
+from gymnasium.spaces import MultiDiscrete
 from stable_baselines3.common.vec_env import VecMonitor, VecVideoRecorder
 from torch.utils.tensorboard import SummaryWriter
 

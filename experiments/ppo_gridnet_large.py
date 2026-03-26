@@ -13,7 +13,7 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from gym.spaces import MultiDiscrete
+from gymnasium.spaces import MultiDiscrete
 from stable_baselines3.common.vec_env import VecEnvWrapper, VecMonitor, VecVideoRecorder
 from torch.distributions.categorical import Categorical
 from torch.utils.tensorboard import SummaryWriter
