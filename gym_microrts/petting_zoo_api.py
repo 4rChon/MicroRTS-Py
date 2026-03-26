@@ -1,14 +1,14 @@
 from copy import deepcopy
 
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
 from pettingzoo import AECEnv
-from pettingzoo.utils import agent_selector
+from pettingzoo.utils.agent_selector import agent_selector
 
-from gym_microrts.envs.vec_env import MicroRTSGridModeSharedMemVecEnv
+from gym_microrts.envs.vec_env import MicroRTSGridModeVecEnv
 
 
-class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMemVecEnv):
+class PettingZooMicroRTSGridModeVecEnv(AECEnv, MicroRTSGridModeVecEnv):
 
     metadata = {"render.modes": ["human"], "name": "micrortsEnv-v0"}
 
@@ -21,14 +21,15 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
         render_theme=2,
         frame_skip=0,
         ai2s=[],
-        map_paths=["maps/10x10/basesTwoWorkers10x10.xml"],
+        map_paths=["maps/10x10/basesWorkers10x10.xml"],
         reward_weight=np.array([0.0, 1.0, 0.0, 0.0, 0.0, 5.0]),
+        autobuild=True,
     ):
         # Initialize Parent
         print("Initializing environment, please wait ...")
         # Initializes AECEnv
         super().__init__()
-        # Initializes MicroRTSGridModeSharedMemVecEnv
+        # Initializes MicroRTSGridModeVecEnv
         super(AECEnv, self).__init__(
             num_selfplay_envs,
             num_bot_envs,
@@ -39,6 +40,7 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
             ai2s=ai2s,
             map_paths=map_paths,
             reward_weight=reward_weight,
+            autobuild=autobuild,
         )
         print("Initialization completed ...")
 
@@ -55,7 +57,7 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
 
         self.action_spaces = {agent: self.agent_action_space for agent in self.possible_agents}
 
-        map_size = self.agent_action_space.shape[0] / 7
+        map_size = self.agent_action_space.shape[0] // 7
 
         self.observation_spaces = {
             agent: spaces.Dict(
@@ -68,10 +70,10 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
         }
 
     def render(self, mode="human"):
-        super(MicroRTSGridModeSharedMemVecEnv, self).render(mode)
+        MicroRTSGridModeVecEnv.render(self, mode)
 
     def close(self):
-        super(MicroRTSGridModeSharedMemVecEnv, self).close()
+        MicroRTSGridModeVecEnv.close(self)
 
     def observation_space(self, agent):
         return self.observation_spaces[agent]
@@ -80,12 +82,13 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
         return self.action_spaces[agent]
 
     def reset(self):
-        _ = MicroRTSGridModeSharedMemVecEnv.reset(self)
+        self._latest_obs = MicroRTSGridModeVecEnv.reset(self)
 
         self.agents = self.possible_agents[:]
         self.rewards = {agent: 0 for agent in self.agents}
         self._cumulative_rewards = {agent: 0 for agent in self.agents}
-        self.dones = {agent: False for agent in self.agents}
+        self.terminations = {agent: False for agent in self.agents}
+        self.truncations = {agent: False for agent in self.agents}
         self.infos = {agent: {} for agent in self.agents}
         self.state = {agent: None for agent in self.agents}
         self.observations = {agent: None for agent in self.agents}
@@ -95,11 +98,11 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
         self.agent_selection = self._agent_selector.next()
 
     def step(self, action):
-        if self.dones[self.agent_selection]:
+        if self.terminations[self.agent_selection] or self.truncations[self.agent_selection]:
             # handles stepping an agent which is already done
             # accepts a None action for the one agent, and moves the agent_selection to
             # the next done agent,  or if there are no more done agents, to the next live agent
-            return self._was_done_step(action)
+            return self._was_dead_step(action)
 
         agent = self.agent_selection
 
@@ -118,11 +121,13 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
 
             self.step_async(actions)
             obs, reward, done, info = self.step_wait()
+            self._latest_obs = obs
             mask = self.get_action_mask()
 
             for i, agent in enumerate(self.agents):
                 self.rewards[agent] = reward[i]
-                self.dones[agent] = done[i]
+                self.terminations[agent] = done[i]
+                self.truncations[agent] = False
                 self.observations[agent] = {"obs": obs[i, :], "action_masks": mask[i, :]}
 
             self.num_moves += 1
@@ -140,12 +145,7 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
         """
         agent_id = self.agent_name_mapping[agent]
 
-        obs = self.obs[agent_id, :, :, :]
-        mask = self.get_action_mask()[agent_id, :, :]
+        obs = self._latest_obs[agent_id, :, :, :]
+        mask = self.get_action_mask()[agent_id, :]
 
         return {"obs": obs, "action_masks": mask}
-
-    def get_action_mask(self):
-        self.vec_client.getMasks(0)
-
-        return self.action_mask

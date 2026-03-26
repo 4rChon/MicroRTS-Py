@@ -1,6 +1,6 @@
 import numpy as np
 
-from gym_microrts.petting_zoo_api import PettingZooMicroRTSGridModeSharedMemVecEnv
+from gym_microrts.petting_zoo_api import PettingZooMicroRTSGridModeVecEnv
 
 
 def softmax(x, axis=None):
@@ -46,9 +46,9 @@ def policy(observation):
 
 def main():
     opponents = []
-    render = False
+    render = True
 
-    env = PettingZooMicroRTSGridModeSharedMemVecEnv(2, 0, ai2s=opponents)
+    env = PettingZooMicroRTSGridModeVecEnv(2, 0, ai2s=opponents, partial_obs=True, autobuild=False)
 
     env.reset()
     if render:
@@ -60,10 +60,10 @@ def main():
             if render:
                 env.render()
 
-            observation, reward, done, info = env.last()
+            observation, reward, termination, truncation, info = env.last()
             action = policy(observation)
 
-            if done:
+            if termination or truncation:
                 env.reset()
                 break
 

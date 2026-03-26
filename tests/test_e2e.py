@@ -1,12 +1,13 @@
 import subprocess
+import sys
 
 
 def test_ppo_gridnet():
 
     try:
         subprocess.run(
-            "cd experiments; python ppo_gridnet.py --num-bot-envs 0 --num-selfplay-envs 2 --num-steps 16 --total-timesteps 32 --cuda False --max-eval-workers 0",
-            shell=True,
+            [sys.executable, "ppo_gridnet.py", "--num-bot-envs", "0", "--num-selfplay-envs", "2", "--num-steps", "16", "--total-timesteps", "32", "--cuda", "False", "--max-eval-workers", "0"],
+            cwd="experiments",
             check=True,
         )
     except subprocess.CalledProcessError as grepexc:
@@ -17,8 +18,8 @@ def test_ppo_gridnet():
 def test_ppo_gridnet_eval_selfplay():
     try:
         subprocess.run(
-            "cd experiments; python ppo_gridnet_eval.py --num-steps 16 --total-timesteps 32 --cuda False",
-            shell=True,
+            [sys.executable, "ppo_gridnet_eval.py", "--num-steps", "16", "--total-timesteps", "32", "--cuda", "False"],
+            cwd="experiments",
             check=True,
         )
     except subprocess.CalledProcessError as grepexc:
@@ -29,7 +30,7 @@ def test_ppo_gridnet_eval_selfplay():
 def test_ppo_gridnet_eval_bot():
 
     subprocess.run(
-        "cd experiments; python ppo_gridnet_eval.py --ai coacAI --num-steps 16 --total-timesteps 32 --cuda False",
-        shell=True,
+        [sys.executable, "ppo_gridnet_eval.py", "--ai", "coacAI", "--num-steps", "16", "--total-timesteps", "32", "--cuda", "False"],
+        cwd="experiments",
         check=True,
     )
