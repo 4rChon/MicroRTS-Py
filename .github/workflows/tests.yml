@@ -13,22 +13,22 @@ jobs:
         python-version: [3.9]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: recursive
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Set up JDK 8 and 
-        uses: actions/setup-java@v1
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
         with:
-          java-version: '8.x' # The JDK version to make available on the path.
-          java-package: jdk # (jre, jdk, or jdk+fx) - defaults to jdk
-          architecture: x64 # (x64 or x86) - defaults to x64
+          distribution: temurin
+          java-version: '8'
+          architecture: x64
 
       - name: Build microrts
         run: bash build.sh
@@ -38,7 +38,7 @@ jobs:
 
       - name: Load cached venv
         id: cached-uv-dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ hashFiles('**/uv.lock') }}
