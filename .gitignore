@@ -137,3 +137,5 @@ dmypy.json
 
 # PyCharm
 .idea/
+
+.vs
