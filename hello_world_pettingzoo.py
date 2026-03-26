@@ -48,7 +48,7 @@ def main():
     opponents = []
     render = True
 
-    env = PettingZooMicroRTSGridModeSharedMemVecEnv(2, 0, ai2s=opponents)
+    env = PettingZooMicroRTSGridModeSharedMemVecEnv(2, 0, ai2s=opponents, partial_obs=True, autobuild=False)
 
     env.reset()
     if render:

@@ -16,70 +16,73 @@ def test_mask():
         map_paths=["maps/4x4/baseTwoWorkers4x4.xml"],
         reward_weight=np.array([10.0, 1.0, 1.0, 0.2, 1.0, 4.0]),
     )
-    envs.action_space.seed(0)
     try:
-        envs.reset()
-        # if render: envs.render()
-    except Exception as e:
-        e.printStackTrace()
-    len(envs.action_plane_space.nvec)
+        envs.action_space.seed(0)
+        try:
+            envs.reset()
+            # if render: envs.render()
+        except Exception as e:
+            e.printStackTrace()
+        len(envs.action_plane_space.nvec)
 
-    # fmt: off
-    np.testing.assert_array_equal(
-        np.array(envs.get_action_mask())[0,1],
-        np.array([
-            1, 1, 1, 0, 1, 0,
-            0, 1, 0, 0,
-            0, 0, 0, 1,
-            0, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0, 0, 0, 0,
-            # relative attack position below
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-        ]).astype(np.int32),
-    )
-    np.testing.assert_array_equal(
-        np.array(envs.get_action_mask())[0,4],
-        np.array([
-            1, 1, 1, 0, 1, 0,
-            0, 0, 1, 0,
-            1, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 1, 0, 0, 0, 0,
-            # relative attack position below
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-        ]).astype(np.int32),
-    )
-    np.testing.assert_array_equal(
-        np.array(envs.get_action_mask())[0,5],
-        np.array([
-            1, 0, 0, 0, 1, 0,
-            0, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 1, 1, 0,
-            0, 0, 0, 1, 0, 0, 0,
-            # relative attack position below
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-        ]).astype(np.int32),
-    )
-    # fmt: on
+        # fmt: off
+        np.testing.assert_array_equal(
+            np.array(envs.get_action_mask())[0,1],
+            np.array([
+                1, 1, 1, 0, 1, 0,
+                0, 1, 0, 0,
+                0, 0, 0, 1,
+                0, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0, 0, 0, 0,
+                # relative attack position below
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+            ]).astype(np.int32),
+        )
+        np.testing.assert_array_equal(
+            np.array(envs.get_action_mask())[0,4],
+            np.array([
+                1, 1, 1, 0, 1, 0,
+                0, 0, 1, 0,
+                1, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 1, 0, 0, 0, 0,
+                # relative attack position below
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+            ]).astype(np.int32),
+        )
+        np.testing.assert_array_equal(
+            np.array(envs.get_action_mask())[0,5],
+            np.array([
+                1, 0, 0, 0, 1, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 1, 1, 0,
+                0, 0, 0, 1, 0, 0, 0,
+                # relative attack position below
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+            ]).astype(np.int32),
+        )
+        # fmt: on
+    finally:
+        envs.close()

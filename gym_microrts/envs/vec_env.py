@@ -108,6 +108,7 @@ class MicroRTSGridModeVecEnv:
         if not jpype._jpype.isStarted():
             registerDomain("ts", alias="tests")
             registerDomain("ai")
+            registerDomain("rts")
             jars = [
                 "bin/microrts.jar",
                 "lib/bots/Coac.jar",
@@ -283,7 +284,6 @@ class MicroRTSGridModeVecEnv:
     def close(self):
         if jpype._jpype.isStarted():
             self.vec_client.close()
-            jpype.shutdownJVM()
 
     def get_action_mask(self):
         """

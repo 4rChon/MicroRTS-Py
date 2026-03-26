@@ -23,6 +23,7 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
         ai2s=[],
         map_paths=["maps/10x10/basesWorkers10x10.xml"],
         reward_weight=np.array([0.0, 1.0, 0.0, 0.0, 0.0, 5.0]),
+        autobuild=True,
     ):
         # Initialize Parent
         print("Initializing environment, please wait ...")
@@ -39,6 +40,7 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
             ai2s=ai2s,
             map_paths=map_paths,
             reward_weight=reward_weight,
+            autobuild=autobuild,
         )
         print("Initialization completed ...")
 
