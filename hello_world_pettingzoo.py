@@ -46,7 +46,7 @@ def policy(observation):
 
 def main():
     opponents = []
-    render = False
+    render = True
 
     env = PettingZooMicroRTSGridModeSharedMemVecEnv(2, 0, ai2s=opponents)
 
@@ -60,10 +60,10 @@ def main():
             if render:
                 env.render()
 
-            observation, reward, done, info = env.last()
+            observation, reward, termination, truncation, info = env.last()
             action = policy(observation)
 
-            if done:
+            if termination or truncation:
                 env.reset()
                 break
 

@@ -1,29 +1,33 @@
 import argparse
+import hashlib
 import random
 import xml.etree.cElementTree as ET
 
-
 def parse_args():
-    # fmt: off
     parser = argparse.ArgumentParser()
-    parser.add_argument('--width', type=int, default=16,help='the width of the map')
-    parser.add_argument('--height', type=int, default=16,help='the height of the map')
+    parser.add_argument('--width', type=int, default=8,help='the width of the map')
+    parser.add_argument('--height', type=int, default=8,help='the height of the map')
+    parser.add_argument('--map_count', type=int, default=10,help='the number of maps to generate')
+    parser.add_argument('--map_prefix', type=str, default='pcg',help='the prefix of the map file')
+    parser.add_argument('--include_wallrings', type=bool, default=False,help='include wallrings in the map')
 
     args = parser.parse_args()
-    # fmt: on
     return args
-
 
 class PCG:
     def __init__(
-        self, width=16, height=16, key=15, unit_location_records=[], sections_choices=[0, 1, 2, 3], base_location_records=[]
+        self, width=16, height=16, include_wallrings=False, key=15, sections_choices=[0, 1, 2, 3], base_location_records=[]
     ):
         self.height = height
         self.width = width
-        self.wallRingsLimit = min(height, width) // 2 - 3
-        if self.wallRingsLimit < 0:
-            self.wallRingsLimit = 0
-        self.wallRings = random.randint(0, self.wallRingsLimit)
+        if include_wallrings:
+            self.wallRingsLimit = min(height, width) // 2 - 3
+            if self.wallRingsLimit < 0:
+                self.wallRingsLimit = 0
+            self.wallRings = random.randint(0, self.wallRingsLimit)
+        else:
+            self.wallRings = 0
+
         self.key = key
         self.sections = [
             ((self.wallRings, (width - 1) // 2), (self.wallRings, (height - 1) // 2)),
@@ -31,7 +35,7 @@ class PCG:
             ((self.wallRings, (width - 1) // 2), (height // 2, (height - 1) - self.wallRings)),
             ((width // 2, (width - 1) - self.wallRings), (height // 2, (height - 1) - self.wallRings)),
         ]
-        self.unit_location_records = unit_location_records
+        self.unit_location_records = []
         self.sections_choices = sections_choices
         self.base_location_records = base_location_records
 
@@ -144,17 +148,32 @@ class PCG:
         self.unit_location_records.append((x, y))
         return x, y
 
-    def get_map(self):
+    def get_map(self, target_file, map_hashes):
         root = ET.Element("rts.PhysicalGameState", width=str(self.width), height=str(self.height))
         self.initiate_terrain(root, "terrain", self.wallRings)
         self.initiate_players(root, "players")
         self.initiate_units(root, "units")
-        tree = ET.ElementTree(root)
-        tree.write("./maps/filename.xml")
-        return tree
 
+        map_hash = self.get_map_hash(root)
+        if map_hash in map_hashes:
+            print("Duplicate map found, skipping generation.")
+            return None
+        
+        map_hashes.add(map_hash)
+        tree = ET.ElementTree(root)
+        tree.write(target_file)
+        return tree
+    
+    def get_map_hash(self, root):
+        map_string = ET.tostring(root, encoding='utf-8', method='xml')
+        return hashlib.md5(map_string).hexdigest()
 
 if __name__ == "__main__":
+    map_hashes = set()
     args = parse_args()
-    pcg = PCG(width=args.width, height=args.height)
-    pcg.get_map()
+    print(f'Generating {args.map_count} maps')
+    for i in range(args.map_count):
+        pcg = PCG(width=args.width, height=args.height, include_wallrings=args.include_wallrings)
+        target_file = f"maps/{args.map_prefix}_{str(i).zfill(5)}.xml"
+        pcg.get_map(target_file, map_hashes)
+        print(f"Map {i} generated")

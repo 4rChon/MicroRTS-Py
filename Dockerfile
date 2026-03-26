@@ -9,16 +9,17 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 # install microrts dependencies
 RUN apt-get -y -q install wget unzip default-jdk
 
+# install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 # install python dependencies
-RUN pip install poetry
-COPY pyproject.toml pyproject.toml
-COPY poetry.lock poetry.lock
-RUN poetry install
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen
 
 # copy local files
 COPY ./gym_microrts /gym_microrts
 COPY ./experiments /experiments
-RUN poetry install
+RUN uv sync --frozen
 # COPY build.sh build.sh
 # RUN bash build.sh
 

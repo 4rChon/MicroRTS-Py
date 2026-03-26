@@ -6,7 +6,7 @@ import warnings
 import xml.etree.ElementTree as ET
 from itertools import cycle
 
-import gym
+import gymnasium as gym
 import jpype
 import jpype.imports
 import numpy as np
@@ -85,13 +85,20 @@ class MicroRTSGridModeVecEnv:
             os.system(f"git submodule update --init --recursive")
 
         if autobuild:
-            print(f"removing {self.microrts_path}/microrts.jar...")
             if os.path.exists(f"{self.microrts_path}/microrts.jar"):
+                print(f"removing {self.microrts_path}/microrts.jar...")
                 os.remove(f"{self.microrts_path}/microrts.jar")
             print(f"building {self.microrts_path}/microrts.jar...")
             root_dir = os.path.dirname(gym_microrts.__path__[0])
             print(root_dir)
-            subprocess.run(["bash", "build.sh", "&>", "build.log"], cwd=f"{root_dir}")
+            if sys.platform == "win32":
+                build_script = os.path.join(root_dir, "build.ps1")
+                subprocess.run(
+                    ["powershell", "-ExecutionPolicy", "Bypass", "-File", build_script],
+                    cwd=root_dir,
+                )
+            else:
+                subprocess.run(["bash", "build.sh", "&>", "build.log"], cwd=f"{root_dir}")
 
         # read map
         root = ET.parse(os.path.join(self.microrts_path, self.map_paths[0])).getroot()
@@ -102,7 +109,7 @@ class MicroRTSGridModeVecEnv:
             registerDomain("ts", alias="tests")
             registerDomain("ai")
             jars = [
-                "microrts.jar",
+                "bin/microrts.jar",
                 "lib/bots/Coac.jar",
                 "lib/bots/Droplet.jar",
                 "lib/bots/GRojoA3N.jar",
@@ -120,7 +127,7 @@ class MicroRTSGridModeVecEnv:
         from rts.units import UnitTypeTable
 
         self.real_utt = UnitTypeTable()
-        from ai.reward import (
+        from ai.rewardfunction import (
             AttackRewardFunction,
             ProduceBuildingRewardFunction,
             ProduceCombatUnitRewardFunction,
@@ -341,7 +348,7 @@ class MicroRTSBotVecEnv(MicroRTSGridModeVecEnv):
             registerDomain("ai")
             registerDomain("rts")
             jars = [
-                "microrts.jar",
+                "bin/microrts.jar",
                 "lib/bots/Coac.jar",
                 "lib/bots/Droplet.jar",
                 "lib/bots/GRojoA3N.jar",
@@ -359,7 +366,7 @@ class MicroRTSBotVecEnv(MicroRTSGridModeVecEnv):
         from rts.units import UnitTypeTable
 
         self.real_utt = UnitTypeTable()
-        from ai.reward import (
+        from ai.rewardfunction import (
             AttackRewardFunction,
             ProduceBuildingRewardFunction,
             ProduceCombatUnitRewardFunction,

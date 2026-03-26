@@ -1,9 +1,9 @@
 from copy import deepcopy
 
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
 from pettingzoo import AECEnv
-from pettingzoo.utils import agent_selector
+from pettingzoo.utils.agent_selector import agent_selector
 
 from gym_microrts.envs.vec_env import MicroRTSGridModeSharedMemVecEnv
 
@@ -21,7 +21,7 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
         render_theme=2,
         frame_skip=0,
         ai2s=[],
-        map_paths=["maps/10x10/basesTwoWorkers10x10.xml"],
+        map_paths=["maps/10x10/basesWorkers10x10.xml"],
         reward_weight=np.array([0.0, 1.0, 0.0, 0.0, 0.0, 5.0]),
     ):
         # Initialize Parent
@@ -55,7 +55,7 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
 
         self.action_spaces = {agent: self.agent_action_space for agent in self.possible_agents}
 
-        map_size = self.agent_action_space.shape[0] / 7
+        map_size = self.agent_action_space.shape[0] // 7
 
         self.observation_spaces = {
             agent: spaces.Dict(
@@ -85,7 +85,8 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
         self.agents = self.possible_agents[:]
         self.rewards = {agent: 0 for agent in self.agents}
         self._cumulative_rewards = {agent: 0 for agent in self.agents}
-        self.dones = {agent: False for agent in self.agents}
+        self.terminations = {agent: False for agent in self.agents}
+        self.truncations = {agent: False for agent in self.agents}
         self.infos = {agent: {} for agent in self.agents}
         self.state = {agent: None for agent in self.agents}
         self.observations = {agent: None for agent in self.agents}
@@ -95,11 +96,11 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
         self.agent_selection = self._agent_selector.next()
 
     def step(self, action):
-        if self.dones[self.agent_selection]:
+        if self.terminations[self.agent_selection] or self.truncations[self.agent_selection]:
             # handles stepping an agent which is already done
             # accepts a None action for the one agent, and moves the agent_selection to
             # the next done agent,  or if there are no more done agents, to the next live agent
-            return self._was_done_step(action)
+            return self._was_dead_step(action)
 
         agent = self.agent_selection
 
@@ -122,7 +123,8 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
 
             for i, agent in enumerate(self.agents):
                 self.rewards[agent] = reward[i]
-                self.dones[agent] = done[i]
+                self.terminations[agent] = done[i]
+                self.truncations[agent] = False
                 self.observations[agent] = {"obs": obs[i, :], "action_masks": mask[i, :]}
 
             self.num_moves += 1

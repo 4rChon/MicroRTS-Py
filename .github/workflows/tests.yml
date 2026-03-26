@@ -33,30 +33,21 @@ jobs:
       - name: Build microrts
         run: bash build.sh
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-          installer-parallel: true
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
       - name: Load cached venv
-        id: cached-poetry-dependencies
+        id: cached-uv-dependencies
         uses: actions/cache@v2
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+          key: venv-${{ runner.os }}-${{ hashFiles('**/uv.lock') }}
 
       - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        continue-on-error: true
-        run: poetry install --no-interaction --no-root
-
-      - name: Install library
-        run: poetry install --no-interaction
+        run: uv sync --frozen
 
       - name: Run headless test
         uses: GabrielBB/xvfb-action@v1
         with:
           run: |
-            xvfb-run -a poetry run pytest -p no:faulthandle tests -v
+            xvfb-run -a uv run pytest -p no:faulthandle tests -v
