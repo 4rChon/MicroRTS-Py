@@ -1,6 +1,6 @@
 import numpy as np
 
-from gym_microrts.petting_zoo_api import PettingZooMicroRTSGridModeSharedMemVecEnv
+from gym_microrts.petting_zoo_api import PettingZooMicroRTSGridModeVecEnv
 
 
 def softmax(x, axis=None):
@@ -48,7 +48,7 @@ def main():
     opponents = []
     render = True
 
-    env = PettingZooMicroRTSGridModeSharedMemVecEnv(2, 0, ai2s=opponents, partial_obs=True, autobuild=False)
+    env = PettingZooMicroRTSGridModeVecEnv(2, 0, ai2s=opponents, partial_obs=True, autobuild=False)
 
     env.reset()
     if render:

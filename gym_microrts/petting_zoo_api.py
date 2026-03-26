@@ -5,10 +5,10 @@ from gymnasium import spaces
 from pettingzoo import AECEnv
 from pettingzoo.utils.agent_selector import agent_selector
 
-from gym_microrts.envs.vec_env import MicroRTSGridModeSharedMemVecEnv
+from gym_microrts.envs.vec_env import MicroRTSGridModeVecEnv
 
 
-class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMemVecEnv):
+class PettingZooMicroRTSGridModeVecEnv(AECEnv, MicroRTSGridModeVecEnv):
 
     metadata = {"render.modes": ["human"], "name": "micrortsEnv-v0"}
 
@@ -29,7 +29,7 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
         print("Initializing environment, please wait ...")
         # Initializes AECEnv
         super().__init__()
-        # Initializes MicroRTSGridModeSharedMemVecEnv
+        # Initializes MicroRTSGridModeVecEnv
         super(AECEnv, self).__init__(
             num_selfplay_envs,
             num_bot_envs,
@@ -70,10 +70,10 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
         }
 
     def render(self, mode="human"):
-        super(MicroRTSGridModeSharedMemVecEnv, self).render(mode)
+        MicroRTSGridModeVecEnv.render(self, mode)
 
     def close(self):
-        super(MicroRTSGridModeSharedMemVecEnv, self).close()
+        MicroRTSGridModeVecEnv.close(self)
 
     def observation_space(self, agent):
         return self.observation_spaces[agent]
@@ -82,7 +82,7 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
         return self.action_spaces[agent]
 
     def reset(self):
-        _ = MicroRTSGridModeSharedMemVecEnv.reset(self)
+        self._latest_obs = MicroRTSGridModeVecEnv.reset(self)
 
         self.agents = self.possible_agents[:]
         self.rewards = {agent: 0 for agent in self.agents}
@@ -121,6 +121,7 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
 
             self.step_async(actions)
             obs, reward, done, info = self.step_wait()
+            self._latest_obs = obs
             mask = self.get_action_mask()
 
             for i, agent in enumerate(self.agents):
@@ -144,12 +145,7 @@ class PettingZooMicroRTSGridModeSharedMemVecEnv(AECEnv, MicroRTSGridModeSharedMe
         """
         agent_id = self.agent_name_mapping[agent]
 
-        obs = self.obs[agent_id, :, :, :]
-        mask = self.get_action_mask()[agent_id, :, :]
+        obs = self._latest_obs[agent_id, :, :, :]
+        mask = self.get_action_mask()[agent_id, :]
 
         return {"obs": obs, "action_masks": mask}
-
-    def get_action_mask(self):
-        self.vec_client.getMasks(0)
-
-        return self.action_mask

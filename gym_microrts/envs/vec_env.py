@@ -1,4 +1,5 @@
-﻿import json
+﻿import faulthandler
+import json
 import os
 import subprocess
 import sys
@@ -52,7 +53,7 @@ class MicroRTSGridModeVecEnv:
         map_paths=["maps/10x10/basesTwoWorkers10x10.xml"],
         reward_weight=np.array([0.0, 1.0, 0.0, 0.0, 0.0, 5.0]),
         cycle_maps=[],
-        autobuild=True,
+        autobuild=False,
         jvm_args=[],
     ):
 
@@ -85,20 +86,19 @@ class MicroRTSGridModeVecEnv:
             os.system(f"git submodule update --init --recursive")
 
         if autobuild:
+            print(f"removing {self.microrts_path}/microrts.jar...")
             if os.path.exists(f"{self.microrts_path}/microrts.jar"):
-                print(f"removing {self.microrts_path}/microrts.jar...")
                 os.remove(f"{self.microrts_path}/microrts.jar")
             print(f"building {self.microrts_path}/microrts.jar...")
             root_dir = os.path.dirname(gym_microrts.__path__[0])
             print(root_dir)
             if sys.platform == "win32":
-                build_script = os.path.join(root_dir, "build.ps1")
                 subprocess.run(
-                    ["powershell", "-ExecutionPolicy", "Bypass", "-File", build_script],
+                    ["powershell", "-ExecutionPolicy", "Bypass", "-File", os.path.join(root_dir, "build.ps1")],
                     cwd=root_dir,
                 )
             else:
-                subprocess.run(["bash", "build.sh", "&>", "build.log"], cwd=f"{root_dir}")
+                subprocess.run(["bash", "build.sh", "&>", "build.log"], cwd=root_dir)
 
         # read map
         root = ET.parse(os.path.join(self.microrts_path, self.map_paths[0])).getroot()
@@ -108,9 +108,8 @@ class MicroRTSGridModeVecEnv:
         if not jpype._jpype.isStarted():
             registerDomain("ts", alias="tests")
             registerDomain("ai")
-            registerDomain("rts")
             jars = [
-                "bin/microrts.jar",
+                "microrts.jar",
                 "lib/bots/Coac.jar",
                 "lib/bots/Droplet.jar",
                 "lib/bots/GRojoA3N.jar",
@@ -284,6 +283,7 @@ class MicroRTSGridModeVecEnv:
     def close(self):
         if jpype._jpype.isStarted():
             self.vec_client.close()
+            jpype.shutdownJVM()
 
     def get_action_mask(self):
         """
@@ -310,7 +310,7 @@ class MicroRTSBotVecEnv(MicroRTSGridModeVecEnv):
         render_theme=2,
         map_paths="maps/10x10/basesTwoWorkers10x10.xml",
         reward_weight=np.array([0.0, 1.0, 0.0, 0.0, 0.0, 5.0]),
-        autobuild=True,
+        autobuild=False,
         jvm_args=[],
     ):
 
@@ -337,7 +337,13 @@ class MicroRTSBotVecEnv(MicroRTSGridModeVecEnv):
             print(f"building {self.microrts_path}/microrts.jar...")
             root_dir = os.path.dirname(gym_microrts.__path__[0])
             print(root_dir)
-            subprocess.run(["bash", "build.sh", "&>", "build.log"], cwd=f"{root_dir}")
+            if sys.platform == "win32":
+                subprocess.run(
+                    ["powershell", "-ExecutionPolicy", "Bypass", "-File", os.path.join(root_dir, "build.ps1")],
+                    cwd=root_dir,
+                )
+            else:
+                subprocess.run(["bash", "build.sh", "&>", "build.log"], cwd=root_dir)
 
         root = ET.parse(os.path.join(self.microrts_path, self.map_paths[0])).getroot()
         self.height, self.width = int(root.get("height")), int(root.get("width"))
@@ -348,7 +354,7 @@ class MicroRTSBotVecEnv(MicroRTSGridModeVecEnv):
             registerDomain("ai")
             registerDomain("rts")
             jars = [
-                "bin/microrts.jar",
+                "microrts.jar",
                 "lib/bots/Coac.jar",
                 "lib/bots/Droplet.jar",
                 "lib/bots/GRojoA3N.jar",
