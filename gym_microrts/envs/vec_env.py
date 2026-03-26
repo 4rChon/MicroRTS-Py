@@ -1,5 +1,4 @@
-﻿import faulthandler
-import json
+﻿import json
 import os
 import subprocess
 import sys
@@ -9,7 +8,6 @@ from itertools import cycle
 
 import gymnasium as gym
 import jpype
-import jpype.imports
 import numpy as np
 from jpype.imports import registerDomain
 from jpype.types import JArray, JInt
@@ -438,8 +436,6 @@ class MicroRTSBotVecEnv(MicroRTSGridModeVecEnv):
         infos = [{"raw_rewards": item} for item in reward]
         return raw_obs, reward @ self.reward_weight, done[:, 0], infos
 
-
-class MicroRTSGridModeSharedMemVecEnv(MicroRTSGridModeVecEnv):
     """
     Similar function to `MicroRTSGridModeVecEnv` but uses shared mem buffers for
     zero-copy data exchange between NumPy and JVM runtimes. Drastically improves
