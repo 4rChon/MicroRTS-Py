@@ -229,6 +229,8 @@ class MicroRTSGridModeVecEnv:
         reward, done = np.array(responses.reward), np.array(responses.done)
         obs = [self._encode_obs(np.array(ro)) for ro in responses.observation]
         infos = [{"raw_rewards": item} for item in reward]
+        infos.append(json.loads(str(responses.info)))
+
         # check if it is in evaluation, if not, then change maps
         if len(self.cycle_maps) > 0:
             # check if an environment is done, if done, reset the client, and replace the observation
@@ -290,6 +292,18 @@ class MicroRTSGridModeVecEnv:
         """
         # action_mask shape: [num_envs, map height, map width, 1 + action types + params]
         action_mask = np.array(self.vec_client.getMasks(0))
+        # self.source_unit_mask shape: [num_envs, map height * map width * 1]
+        self.source_unit_mask = action_mask[:, :, :, 0].reshape(self.num_envs, -1)
+        action_type_and_parameter_mask = action_mask[:, :, :, 1:].reshape(self.num_envs, self.height * self.width, -1)
+        return action_type_and_parameter_mask
+        
+    def get_action_mask_by_player(self, player_id):
+        """
+        :return: Mask for action types and action parameters,
+        of shape [num_envs, map height * width, action types + params]
+        """
+        # action_mask shape: [num_envs, map height, map width, 1 + action types + params]
+        action_mask = np.array(self.vec_client.getMasks(player_id))
         # self.source_unit_mask shape: [num_envs, map height * map width * 1]
         self.source_unit_mask = action_mask[:, :, :, 0].reshape(self.num_envs, -1)
         action_type_and_parameter_mask = action_mask[:, :, :, 1:].reshape(self.num_envs, self.height * self.width, -1)
