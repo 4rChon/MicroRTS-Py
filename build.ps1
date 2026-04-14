@@ -51,8 +51,7 @@ try {
     Push-Location "build"
     & jar cvf microrts.jar * | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "JAR creation failed" }
-    Move-Item -Force "microrts.jar" "..\bin\microrts.jar"
-    Copy-Item "..\bin\microrts.jar" "..\microrts.jar"
+    Move-Item -Force "microrts.jar" "..\microrts.jar"
     Pop-Location
 
     # Clean up build directory
